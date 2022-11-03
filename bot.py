@@ -17,15 +17,10 @@ from telegram import Update
 PHOTOS_DIR = "photos"
 CHATS_DB = "chats.txt"
 IS_PROD = bool(os.environ.get('IS_PROD', 'False'))
-IS_PROD = False
-
 APP_NAME = str(os.environ.get(
     'APP_NAME', "tg-image-bot"))
 CHANCE = float(os.environ.get('CHANCE', '0.6'))
-TOKEN = str(os.environ.get(
-    'TOKEN', "5483400723:AAE7qPx7GVPoxIjR30YkkZuy5VaqNy1mYns"))
-TOKEN = "5483400723:AAE7qPx7GVPoxIjR30YkkZuy5VaqNy1mYns"
-
+TOKEN = str(os.environ.get('TOKEN', ""))
 PORT = int(os.environ.get('PORT', '8443'))
 
 print('IS_PROD', IS_PROD)
