@@ -6,9 +6,10 @@ import logging
 from pathlib import PosixPath
 from telegram import Update
 import uuid
-import requests
+# import requests
 import os
 import glob
+import urllib.request
 import random
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ContextTypes
@@ -16,9 +17,12 @@ import telegram
 
 PHOTOS_DIR = "photos"
 CHATS_DB = "chats.txt"
-APP_NAME = str(os.environ.get('APP_NAME', "https://tg-image-bot.herokuapp.com/"))
+IS_PROD = bool(os.environ.get('IS_PROD', False))
+APP_NAME = str(os.environ.get(
+    'APP_NAME', "https://tg-image-bot.herokuapp.com/"))
 CHANCE = float(os.environ.get('CHANCE', '0.6'))
-TOKEN = str(os.environ.get('TOKEN', ""))
+TOKEN = str(os.environ.get(
+    'TOKEN', "5483400723:AAEsfZkClxYZWyfVf8UO_Z5-xQI2y2J9IyE"))
 PORT = int(os.environ.get('PORT', '8443'))
 
 # Enable logging
@@ -30,14 +34,17 @@ logger = logging.getLogger(__name__)
 
 def echo(update: Filters.text, context):
     url = update.message.text
+    print(url)
     if str(url).startswith("http"):
         photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
 
-        img_data = requests.get(url).content
-        with open(photo_path, 'wb') as handler:
-            handler.write(img_data)
-        # update.message.reply_photo(open(photo_path, 'rb'))
-        update.message.reply_text("Изображение принято.")
+        try:
+            urllib.request.urlretrieve(url, photo_path)
+            update.message.reply_photo(open(photo_path, 'rb'))
+            update.message.reply_text("Изображение принято.")
+        except Exception as e:
+            print('image from web is bad', e)
+            update.message.reply_text("Изображение не принято.")
 
     update.message.reply_text(
         """
@@ -94,6 +101,8 @@ def clear_photo_dir(update=None, context=None):
 def send_photos(update=None, context=None, rand=True):
     if rand and random.uniform(0, 1) > CHANCE:
         print('CHANCE falls')
+        if update:
+            update.message.reply_text("Попробуй ещё раз.")
         return
 
     print('CHANCE wins')
@@ -108,16 +117,19 @@ def send_photos(update=None, context=None, rand=True):
         print("no images")
         if update:
             update.message.reply_text("Нет изображений в базе")
+    chats_good = []
     for chat in chats:
         try:
             photo = random.choice(photos)
             bot.send_photo(chat, open(photo, 'rb'))
+            chats_good.append(chat)
             print('chat good', chat)
         except Exception as e:
             print('chat bad', chat, e)
     if update:
+        chats_good = [str(chat) for chat in chats_good]
         update.message.reply_text(
-            "Изображения отправлены в", ", ".join(chats))
+            "Изображения отправлены в " + ", ".join(chats_good))
 
 
 def main():
@@ -133,13 +145,14 @@ def main():
 
     dp.add_error_handler(error)
 
-    # updater.start_polling()
-
-    updater.start_webhook(listen="0.0.0.0",
-                          port=PORT,
-                          url_path=TOKEN)
-    # updater.bot.set_webhook(url=settings.WEBHOOK_URL)
-    updater.bot.set_webhook(APP_NAME + TOKEN)
+    if IS_PROD:
+        updater.start_webhook(listen="0.0.0.0",
+                            port=PORT,
+                            url_path=TOKEN)
+        # updater.bot.set_webhook(url=settings.WEBHOOK_URL)
+        updater.bot.set_webhook(APP_NAME + TOKEN)
+    else:
+        updater.start_polling()
 
     updater.idle()
 
