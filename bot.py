@@ -11,7 +11,8 @@ import glob
 import urllib.request
 import random
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import CommandHandler, MessageHandler, Application
+from telegram.ext.filters import PHOTO, TEXT, StatusUpdate
 import telegram
 
 PHOTOS_DIR = "photos"
@@ -32,7 +33,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-def echo(update: Filters.text, context):
+def echo(update: TEXT, context):
     url = update.message.text
     print(url)
     if str(url).startswith("http"):
@@ -54,7 +55,7 @@ def echo(update: Filters.text, context):
     )
 
 
-def added(update: Filters.status_update.new_chat_members, context):
+def added(update: StatusUpdate.NEW_CHAT_MEMBERS, context):
     """Echo the user message."""
     print('added')
     chat = str(update.message.chat.id)
@@ -106,7 +107,7 @@ def send_photos(update=None, context=None, rand=True):
         return
 
     print('CHANCE wins')
-    bot = telegram.Bot(token=TOKEN)
+    bot = Application.builder().token('TOKEN').build().bot
 
     chats = open('chats.txt').readlines()
     chats = [int(chat.strip()) for chat in chats if chat != ""]
@@ -133,20 +134,20 @@ def send_photos(update=None, context=None, rand=True):
 
 
 def main():
-    updater = Updater(token=TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("test", send_photos))
-    dp.add_handler(CommandHandler("clear_db", clear_photo_dir))
+    application = Application.builder().token('TOKEN').build()
+    updater = application.updater
+    application.add_handler(CommandHandler("test", send_photos))
+    application.add_handler(CommandHandler("clear_db", clear_photo_dir))
 
-    dp.add_handler(MessageHandler(Filters.text, echo))
-    dp.add_handler(MessageHandler(Filters.photo, photo))
-    dp.add_handler(MessageHandler(
-        Filters.status_update.new_chat_members, added))
+    application.add_handler(MessageHandler(TEXT, echo))
+    application.add_handler(MessageHandler(PHOTO, photo))
+    application.add_handler(MessageHandler(
+        StatusUpdate.NEW_CHAT_MEMBERS, added))
 
-    dp.add_error_handler(error)
+    application.add_error_handler(error)
 
     if IS_PROD:
-        updater.run_webhook(
+        application.run_webhook(
             listen="0.0.0.0",
             port=PORT,
             url_path=TOKEN,
