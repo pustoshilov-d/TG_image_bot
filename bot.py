@@ -15,9 +15,11 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Conte
 import telegram
 
 PHOTOS_DIR = "photos"
-CHANCE = 0.9
-TOKEN = "5483400723:AAEsfZkClxYZWyfVf8UO_Z5-xQI2y2J9IyE"
-
+CHATS_DB = "chats.txt"
+APP_NAME = str(os.environ.get('APP_NAME', "https://tg-image-bot.herokuapp.com/"))
+CHANCE = float(os.environ.get('CHANCE', '0.6'))
+TOKEN = str(os.environ.get('TOKEN', "5483400723:AAEsfZkClxYZWyfVf8UO_Z5-xQI2y2J9IyE"))
+PORT = int(os.environ.get('PORT', '8443'))
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -117,6 +119,7 @@ def send_photos(update=None, context=None, rand=True):
         update.message.reply_text(
             "Изображения отправлены в", ", ".join(chats))
 
+
 def main():
     updater = Updater(token=TOKEN, use_context=True)
     dp = updater.dispatcher
@@ -130,8 +133,16 @@ def main():
 
     dp.add_error_handler(error)
 
-    updater.start_polling()
+    # updater.start_polling()
+
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TOKEN)
+    # updater.bot.set_webhook(url=settings.WEBHOOK_URL)
+    updater.bot.set_webhook(APP_NAME + TOKEN)
+
     updater.idle()
+
 
 if __name__ == '__main__':
     main()
