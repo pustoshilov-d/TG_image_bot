@@ -7,8 +7,8 @@ from pathlib import PosixPath
 import uuid
 import os
 import glob
-import urllib.request
 import random
+import requests
 
 from telegram.ext import CommandHandler, MessageHandler, Application, CommandHandler, ContextTypes, MessageHandler, filters
 from telegram import Update
@@ -17,14 +17,17 @@ from telegram import Update
 PHOTOS_DIR = "photos"
 CHATS_DB = "chats.txt"
 IS_PROD = bool(os.environ.get('IS_PROD', 'False'))
+# IS_PROD = False
 APP_NAME = str(os.environ.get(
     'APP_NAME', "tg-image-bot"))
 CHANCE = float(os.environ.get('CHANCE', '0.6'))
 TOKEN = str(os.environ.get('TOKEN', ""))
+# TOKEN = ""
 PORT = int(os.environ.get('PORT', '8443'))
 
 print('IS_PROD', IS_PROD)
 print('TOKEN', TOKEN)
+print('PORT', PORT)
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -40,8 +43,9 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
 
         try:
-            urllib.request.urlretrieve(url, photo_path)
-            await update.message.reply_photo(open(photo_path, 'rb'))
+            with open(photo_path, 'wb') as f:
+                f.write(requests.get(url).content)
+            # await update.message.reply_photo(open(photo_path, 'rb'))
             await update.message.reply_text("Изображение принято.")
         except Exception as e:
             print('image from web is bad', e)
@@ -76,7 +80,7 @@ async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
     await photo_file.download(photo_path)
 
-    await update.message.reply_photo(open(photo_path, 'rb'))
+    # await update.message.reply_photo(open(photo_path, 'rb'))
     await update.message.reply_text("Изображение принято.")
 
 

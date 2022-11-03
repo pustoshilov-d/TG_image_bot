@@ -1,3 +1,5 @@
 `pipenv run python bot.py`
-`pipenv run python -c 'import bot; print(bot.clear_photo_dir())'`
-`pipenv run python -c 'import bot; print(bot.send_photos())'`
+
+`pipenv run python -c 'import bot; import asyncio;  print(asyncio.run(bot.clear_photo_dir()))'`
+
+`python -c 'import bot; import asyncio;  print(asyncio.run(bot.send_photos()))''`
