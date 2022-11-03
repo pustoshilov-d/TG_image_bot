@@ -6,7 +6,6 @@ import logging
 from pathlib import PosixPath
 from telegram import Update
 import uuid
-# import requests
 import os
 import glob
 import urllib.request
