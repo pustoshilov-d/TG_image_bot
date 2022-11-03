@@ -11,17 +11,18 @@ import glob
 import urllib.request
 import random
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ContextTypes
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import telegram
 
 PHOTOS_DIR = "photos"
 CHATS_DB = "chats.txt"
-IS_PROD = bool(os.environ.get('IS_PROD', False))
+IS_PROD = bool(os.environ.get('IS_PROD', "0"))
+print('IS_PROD', IS_PROD)
 APP_NAME = str(os.environ.get(
     'APP_NAME', "https://tg-image-bot.herokuapp.com/"))
 CHANCE = float(os.environ.get('CHANCE', '0.6'))
 TOKEN = str(os.environ.get(
-    'TOKEN', "5483400723:AAEsfZkClxYZWyfVf8UO_Z5-xQI2y2J9IyE"))
+    'TOKEN', ""))
 PORT = int(os.environ.get('PORT', '8443'))
 
 # Enable logging
@@ -146,8 +147,8 @@ def main():
 
     if IS_PROD:
         updater.start_webhook(listen="0.0.0.0",
-                            port=PORT,
-                            url_path=TOKEN)
+                              port=PORT,
+                              url_path=TOKEN)
         # updater.bot.set_webhook(url=settings.WEBHOOK_URL)
         updater.bot.set_webhook(APP_NAME + TOKEN)
     else:
