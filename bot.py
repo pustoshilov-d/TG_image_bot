@@ -19,7 +19,7 @@ CHATS_DB = "chats.txt"
 IS_PROD = bool(os.environ.get('IS_PROD', 'False'))
 print('IS_PROD', IS_PROD)
 APP_NAME = str(os.environ.get(
-    'APP_NAME', "https://tg-image-bot.herokuapp.com/"))
+    'APP_NAME', "tg-image-bot"))
 CHANCE = float(os.environ.get('CHANCE', '0.6'))
 TOKEN = str(os.environ.get(
     'TOKEN', ""))
@@ -146,10 +146,12 @@ def main():
     dp.add_error_handler(error)
 
     if IS_PROD:
-        updater.start_webhook(listen="0.0.0.0",
-                              port=PORT,
-                              url_path=TOKEN,
-                              webhook_url="https://<appname>.herokuapp.com/" + TOKEN)
+        updater.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            url_path=TOKEN,
+            webhook_url=f"https://{APP_NAME}.herokuapp.com/" + TOKEN
+        )
     else:
         updater.start_polling()
 
