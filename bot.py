@@ -16,7 +16,7 @@ import telegram
 
 PHOTOS_DIR = "photos"
 CHATS_DB = "chats.txt"
-IS_PROD = bool(os.environ.get('IS_PROD', "0"))
+IS_PROD = bool(os.environ.get('IS_PROD', 'False'))
 print('IS_PROD', IS_PROD)
 APP_NAME = str(os.environ.get(
     'APP_NAME', "https://tg-image-bot.herokuapp.com/"))
@@ -148,17 +148,10 @@ def main():
     if IS_PROD:
         updater.start_webhook(listen="0.0.0.0",
                               port=PORT,
-                              url_path=TOKEN)
-        # updater.bot.set_webhook(url=settings.WEBHOOK_URL)
-        updater.bot.set_webhook(APP_NAME + TOKEN)
+                              url_path=TOKEN,
+                              webhook_url="https://<appname>.herokuapp.com/" + TOKEN)
     else:
         updater.start_polling()
-
-    # updater.start_webhook(listen="0.0.0.0",
-    #                         port=PORT,
-    #                         url_path=TOKEN)
-    # updater.bot.set_webhook(APP_NAME + TOKEN)
-    # # updater.start_polling()
 
     updater.idle()
 
