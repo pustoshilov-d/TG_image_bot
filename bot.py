@@ -18,7 +18,7 @@ PHOTOS_DIR = "photos"
 CHATS_DB = "chats.txt"
 APP_NAME = str(os.environ.get('APP_NAME', "https://tg-image-bot.herokuapp.com/"))
 CHANCE = float(os.environ.get('CHANCE', '0.6'))
-TOKEN = str(os.environ.get('TOKEN', "5483400723:AAEsfZkClxYZWyfVf8UO_Z5-xQI2y2J9IyE"))
+TOKEN = str(os.environ.get('TOKEN', ""))
 PORT = int(os.environ.get('PORT', '8443'))
 
 # Enable logging
