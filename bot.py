@@ -36,27 +36,57 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
+def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    admin = str(update.message)  # TODO
+    admins = open('admins.txt', 'r').readlines()
+    admins = [admin.strip() for admin in admins if admin != ""]
+    print('new admin', admin)
+    print('admins', admins)
+
+    if admin not in admins:
+        open('admins.txt', 'a').write(admin+"\n")
+        print('Admin added')
+    else:
+        print('Admin not added')
+    pass
+
+
+def is_admin(update: Update) -> bool:
+    admin = str(update.message)  # TODO
+    admins = open('chats.txt').readlines()
+    admins = [int(admin.strip()) for admin in admins if admin != ""]
+    res = admin in admins
+    print(admin, 'is_admin', res)
+    return res
+
+
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    print(update)
+    print(update.message)
+    if not is_admin(update):
+        await update.message.reply_text("Прости, общаюсь только с админами.")
+        return
     url = update.message.text
     print(url)
-    if str(url).startswith("http"):
-        photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
+    if not str(url).startswith("http"):
+        await update.message.reply_text("Присылай мне только ссылки (http...) на изображения или команды.")
+        await update.message.reply_text(
+            """
+    Чтобы сохранить изображение в базе, отправь мне его или ссылку на него, которая начинается с \"http\".
+    /test для единоразовой отправки во все чаты, /clear_db для очистки базы.
+    """
+        )
 
-        try:
-            with open(photo_path, 'wb') as f:
-                f.write(requests.get(url).content)
-            # await update.message.reply_photo(open(photo_path, 'rb'))
-            await update.message.reply_text("Изображение принято.")
-        except Exception as e:
-            print('image from web is bad', e)
-            await update.message.reply_text("Изображение не принято.")
+    photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
 
-    await update.message.reply_text(
-        """
-Чтобы сохранить изображение в базе, отправь мне его или ссылку на него, которая начинается с \"http\".
-/test для единоразовой отправки во все чаты, /clear_db для очистки базы.
-"""
-    )
+    try:
+        with open(photo_path, 'wb') as f:
+            f.write(requests.get(url).content)
+        # await update.message.reply_photo(open(photo_path, 'rb'))
+        await update.message.reply_text("Изображение принято.")
+    except Exception as e:
+        print('image from web is bad', e)
+        await update.message.reply_text("Изображение не принято.")
 
 
 async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -70,12 +100,16 @@ async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if chat not in chats:
         open('chats.txt', 'a').write(chat+"\n")
-        print('Added')
+        print('Chat added')
     else:
-        print('Not added')
+        print('Chat not added')
 
 
 async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        await update.message.reply_text("Добавлять фото могут только админы.")
+        return
+
     photo_file = await update.message.photo[-1].get_file()
     photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
     await photo_file.download(photo_path)
@@ -90,17 +124,22 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def clear_photo_dir(update: Update = None, context: ContextTypes.DEFAULT_TYPE = None) -> None:
+    if not is_admin(update):
+        await update.message.reply_text("Очищать базу могут только админы.")
+        return
     photos = glob.glob("photos/*")
     for photo in photos:
         print(photo)
         os.remove(photo)
 
     print('Done')
-    if update:
-        await update.message.reply_text("База очищена.")
+    await update.message.reply_text("База очищена.")
 
 
 async def send_photos(update: Update = None, context: ContextTypes.DEFAULT_TYPE = None, rand=True) -> None:
+    if not is_admin(update):
+        await update.message.reply_text("Тестировать рассылку могут только админы.")
+        return
     if rand and random.uniform(0, 1) > CHANCE:
         print('CHANCE falls')
         if update:
@@ -142,6 +181,7 @@ def main():
 
     application = Application.builder().token(TOKEN).build()
 
+    application.add_handler(CommandHandler("make_me_admin", register_admin))
     application.add_handler(CommandHandler("test", send_photos))
     application.add_handler(CommandHandler("clear_db", clear_photo_dir))
 
