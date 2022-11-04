@@ -53,7 +53,7 @@ async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 def is_admin(update: Update) -> bool:
     admin = str(update.message.chat.id)
-    admins = open('chats.txt').readlines()
+    admins = open('admins.txt').readlines()
     admins = [int(admin.strip()) for admin in admins if admin != ""]
     res = admin in admins
     print(admin, 'is_admin', res)
