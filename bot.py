@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     admin = str(update.message.chat.id)
     admins = open('admins.txt', 'r').readlines()
-    admins = [admin.strip() for admin in admins if admin != ""]
+    admins = [str(admin.strip()) for admin in admins if admin != ""]
     print('new admin', admin)
     print('admins', admins)
 
@@ -52,11 +52,12 @@ async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 def is_admin(update: Update) -> bool:
-    admin = str(update.message.chat.id)
+    person = str(update.message.chat.id)
     admins = open('admins.txt').readlines()
-    admins = [int(admin.strip()) for admin in admins if admin != ""]
-    res = admin in admins
-    print(admin, 'is_admin', res)
+    admins = [str(admin.strip()) for admin in admins if admin != ""]
+
+    res = person in admins
+    print(person, 'is_admin', res)
     return res
 
 
@@ -92,7 +93,7 @@ async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     print('added')
     chat = str(update.message.chat.id)
     chats = open('chats.txt', 'r').readlines()
-    chats = [chat.strip() for chat in chats if chat != ""]
+    chats = [str(chat.strip()) for chat in chats if chat != ""]
     print('new chat', chat)
     print('chats', chats)
 
@@ -147,7 +148,7 @@ async def send_photos(update: Update = None, context: ContextTypes.DEFAULT_TYPE 
     print('CHANCE wins')
 
     chats = open('chats.txt').readlines()
-    chats = [int(chat.strip()) for chat in chats if chat != ""]
+    chats = [str(chat.strip()) for chat in chats if chat != ""]
     print('chats to send', chats)
 
     photos = glob.glob("photos/*")
