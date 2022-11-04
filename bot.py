@@ -36,8 +36,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    admin = str(update.message)  # TODO
+async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    admin = str(update.message.chat.id)
     admins = open('admins.txt', 'r').readlines()
     admins = [admin.strip() for admin in admins if admin != ""]
     print('new admin', admin)
@@ -48,11 +48,11 @@ def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         print('Admin added')
     else:
         print('Admin not added')
-    pass
+    await update.message.reply_text("Админ добавлен. Чтобы сохранить изображение в базе, отправь мне его или ссылку на него, которая начинается с \"http\". /test для единоразовой отправки во все чаты, /clear_db для очистки базы.")
 
 
 def is_admin(update: Update) -> bool:
-    admin = str(update.message)  # TODO
+    admin = str(update.message.chat.id)
     admins = open('chats.txt').readlines()
     admins = [int(admin.strip()) for admin in admins if admin != ""]
     res = admin in admins
@@ -61,8 +61,6 @@ def is_admin(update: Update) -> bool:
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    print(update)
-    print(update.message)
     if not is_admin(update):
         await update.message.reply_text("Прости, общаюсь только с админами.")
         return
@@ -107,7 +105,7 @@ async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
-        await update.message.reply_text("Добавлять фото могут только админы.")
+        await update.message.reply_text("Прости, общаюсь только с админами.")
         return
 
     photo_file = await update.message.photo[-1].get_file()
@@ -125,7 +123,7 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def clear_photo_dir(update: Update = None, context: ContextTypes.DEFAULT_TYPE = None) -> None:
     if not is_admin(update):
-        await update.message.reply_text("Очищать базу могут только админы.")
+        await update.message.reply_text("Прости, общаюсь только с админами.")
         return
     photos = glob.glob("photos/*")
     for photo in photos:
@@ -138,7 +136,7 @@ async def clear_photo_dir(update: Update = None, context: ContextTypes.DEFAULT_T
 
 async def send_photos(update: Update = None, context: ContextTypes.DEFAULT_TYPE = None, rand=True) -> None:
     if not is_admin(update):
-        await update.message.reply_text("Тестировать рассылку могут только админы.")
+        await update.message.reply_text("Прости, общаюсь только с админами.")
         return
     if rand and random.uniform(0, 1) > CHANCE:
         print('CHANCE falls')
