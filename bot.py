@@ -68,13 +68,13 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = update.message.text
     print(url)
     if not str(url).startswith("http"):
-        await update.message.reply_text("Присылай мне только ссылки (http...) на изображения или команды.")
         await update.message.reply_text(
             """
     Чтобы сохранить изображение в базе, отправь мне его или ссылку на него, которая начинается с \"http\".
     /test для единоразовой отправки во все чаты, /clear_db для очистки базы.
     """
         )
+        return
 
     photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
 
