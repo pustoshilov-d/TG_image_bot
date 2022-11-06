@@ -244,7 +244,7 @@ def main():
         filters.StatusUpdate.NEW_CHAT_MEMBERS, added))
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", send_message_command)],
+        entry_points=[CommandHandler("send_message", send_message_command)],
         states={
             "STATE_GET_MESSAGE": [
                 MessageHandler(filters.TEXT, send_message)
