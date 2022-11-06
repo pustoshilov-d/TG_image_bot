@@ -36,6 +36,24 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
+def get_new_image_name() -> str:
+    photos = [int(os.path.basename(x).split('.')[0])
+              for x in glob.glob("photos/*")]
+    if photos == []:
+        return None
+    photo = PosixPath('photos/'+str(max(photos)+1)+".jpg")
+    return photo
+
+
+def get_first_image_name() -> str:
+    photos = [int(os.path.basename(x).split('.')[0])
+              for x in glob.glob("photos/*")]
+    if photos == []:
+        return None
+    photo = PosixPath('photos/'+str(min(photos))+".jpg")
+    return photo
+
+
 async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     admin = str(update.message.chat.id)
     admins = open('admins.txt', 'r').readlines()
@@ -48,7 +66,7 @@ async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         print('Admin added')
     else:
         print('Admin not added')
-    await update.message.reply_text("Админ добавлен. Чтобы сохранить изображение в базе, отправь мне его или ссылку на него, которая начинается с \"http\". /test для единоразовой отправки во все чаты, /clear_db для очистки базы.")
+    await update.message.reply_text("Админ добавлен. Чтобы сохранить изображение в базе, отправь мне его. /test для единоразовой отправки во все чаты, /clear_db для очистки базы.")
 
 
 def is_admin(update: Update) -> bool:
@@ -61,31 +79,12 @@ def is_admin(update: Update) -> bool:
     return res
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         await update.message.reply_text("Прости, общаюсь только с админами.")
         return
-    url = update.message.text
-    print(url)
-    if not str(url).startswith("http"):
-        await update.message.reply_text(
-            """
-    Чтобы сохранить изображение в базе, отправь мне его или ссылку на него, которая начинается с \"http\".
-    /test для единоразовой отправки во все чаты, /clear_db для очистки базы.
-    """
-        )
-        return
 
-    photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
-
-    try:
-        with open(photo_path, 'wb') as f:
-            f.write(requests.get(url).content)
-        # await update.message.reply_photo(open(photo_path, 'rb'))
-        await update.message.reply_text("Изображение принято.")
-    except Exception as e:
-        print('image from web is bad', e)
-        await update.message.reply_text("Изображение не принято.")
+    await update.message.reply_text("Hi")
 
 
 async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -110,7 +109,7 @@ async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     photo_file = await update.message.photo[-1].get_file()
-    photo_path = PosixPath('photos/'+str(uuid.uuid4().fields[-1])+".jpg")
+    photo_path = get_new_image_name()
     await photo_file.download(photo_path)
 
     # await update.message.reply_photo(open(photo_path, 'rb'))
@@ -139,27 +138,30 @@ async def send_photos(update: Update = None, context: ContextTypes.DEFAULT_TYPE 
     if not is_admin(update):
         await update.message.reply_text("Прости, общаюсь только с админами.")
         return
-    if rand and random.uniform(0, 1) > CHANCE:
-        print('CHANCE falls')
-        if update:
-            await update.message.reply_text("Попробуй ещё раз.")
-        return
+    # if rand and random.uniform(0, 1) > CHANCE:
+    #     print('CHANCE falls')
+    #     if update:
+    #         await update.message.reply_text("Попробуй ещё раз.")
+    #     return
 
-    print('CHANCE wins')
+    # print('CHANCE wins')
 
     chats = open('chats.txt').readlines()
     chats = [str(chat.strip()) for chat in chats if chat != ""]
     print('chats to send', chats)
 
-    photos = glob.glob("photos/*")
-    if photos == []:
+    photo = get_first_image_name()
+
+    if photo == None:
         print("no images")
         if update:
-            await update.message.reply_text("Нет изображений в базе")
+            await update.message.reply_text("Нет изображений в базе, добавьте!")
+        return
+
     chats_good = []
     for chat in chats:
         try:
-            photo = random.choice(photos)
+            # photo = random.choice(photos)
             if context:
                 await context.bot.send_photo(chat, open(photo, 'rb'))
             else:
@@ -174,6 +176,7 @@ async def send_photos(update: Update = None, context: ContextTypes.DEFAULT_TYPE 
         chats_good = [str(chat) for chat in chats_good]
         await update.message.reply_text(
             "Изображения отправлены в " + ", ".join(chats_good))
+    os.remove(photo)
 
 
 def main():
@@ -181,10 +184,12 @@ def main():
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("make_me_admin", register_admin))
-    application.add_handler(CommandHandler("test", send_photos))
+    application.add_handler(CommandHandler("send", send_photos))
     application.add_handler(CommandHandler("clear_db", clear_photo_dir))
 
-    application.add_handler(MessageHandler(filters.TEXT, echo))
+    # application.add_handler(CommandHandler("send_message", send_message))
+    # application.add_handler(MessageHandler(filters.TEXT, echo))
+
     application.add_handler(MessageHandler(filters.PHOTO, photo))
     application.add_handler(MessageHandler(
         filters.StatusUpdate.NEW_CHAT_MEMBERS, added))
