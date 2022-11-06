@@ -40,7 +40,7 @@ def get_new_image_name() -> str:
     photos = [int(os.path.basename(x).split('.')[0])
               for x in glob.glob("photos/*")]
     if photos == []:
-        return None
+        return PosixPath('photos/1.jpg')
     photo = PosixPath('photos/'+str(max(photos)+1)+".jpg")
     return photo
 
@@ -87,7 +87,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Чтобы сохранить изображение в базе, отправь мне его. /send для во все чаты фотки в порядке стэка, /clear_db для очистки базы, /send_message отправить сообщение от имени бота во все чаты.")
 
 
-async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def send_message_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         await update.message.reply_text("Прости, общаюсь только с админами.")
         return
@@ -120,8 +120,9 @@ async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     photo_path = get_new_image_name()
     await photo_file.download(photo_path)
 
-    # await update.message.reply_photo(open(photo_path, 'rb'))
+    await update.message.reply_photo(open(photo_path, 'rb'))
     await update.message.reply_text("Изображение принято.")
+    print('Изображение принято. База:', glob.glob("photos/*"))
 
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
