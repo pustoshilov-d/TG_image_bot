@@ -128,10 +128,11 @@ async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     chats_good = [str(chat) for chat in chats_good]
     await update.message.reply_text(
         "Сообщение отправлено в " + ", ".join(chats_good))
+    await update.message.reply_text("Чтобы завершить отправку, нажмите /end_message")
 
 
 async def send_message_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Сообщение отправлено")
+    await update.message.reply_text("Отправка завершена.")
 
 
 async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -252,7 +253,7 @@ def main():
                 MessageHandler(filters.TEXT, send_message)
             ],
         },
-        fallbacks=[MessageHandler(filters.Regex("^Done$"), send_message_done)],
+        fallbacks=[CommandHandler("end_message", send_message_done)],
     )
     application.add_handler(conv_handler)
 
