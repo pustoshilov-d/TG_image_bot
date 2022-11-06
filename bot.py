@@ -239,8 +239,6 @@ def main():
     # application.add_handler(CommandHandler("send_message", send_message))
     # application.add_handler(MessageHandler(filters.TEXT, echo))
 
-    application.add_handler(MessageHandler(filters.TEXT, start))
-
     application.add_handler(MessageHandler(filters.PHOTO, photo))
     application.add_handler(MessageHandler(
         filters.StatusUpdate.NEW_CHAT_MEMBERS, added))
@@ -255,6 +253,8 @@ def main():
         fallbacks=[MessageHandler(filters.Regex("^Done$"), send_message_done)],
     )
     application.add_handler(conv_handler)
+
+    application.add_handler(MessageHandler(filters.TEXT, start))
 
     application.add_error_handler(error)
 
