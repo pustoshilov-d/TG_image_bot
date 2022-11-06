@@ -96,7 +96,7 @@ async def send_message_command(update: Update, context: ContextTypes.DEFAULT_TYP
     return "STATE_GET_MESSAGE"
 
 
-async def send_message_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def send_message_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     if not is_admin(update):
         await update.message.reply_text("Прости, общаюсь только с админами.")
         return
@@ -128,6 +128,10 @@ async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     chats_good = [str(chat) for chat in chats_good]
     await update.message.reply_text(
         "Сообщение отправлено в " + ", ".join(chats_good))
+
+
+async def send_message_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Сообщение отправлено")
 
 
 async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -244,13 +248,10 @@ def main():
         entry_points=[CommandHandler("start", send_message_command)],
         states={
             "STATE_GET_MESSAGE": [
-                MessageHandler(
-                    filters.TEXT & ~(filters.COMMAND |
-                                     filters.Regex("^Done$")),
-                    send_message,
-                )
+                MessageHandler(filters.TEXT, send_message)
             ],
-        }
+        },
+        fallbacks=[MessageHandler(filters.Regex("^Done$"), send_message_done)],
     )
     application.add_handler(conv_handler)
 
