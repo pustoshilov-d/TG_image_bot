@@ -244,8 +244,6 @@ def main():
     application.add_handler(MessageHandler(
         filters.StatusUpdate.NEW_CHAT_MEMBERS, added))
 
-    application.add_handler(MessageHandler(filters.TEXT, start))
-
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("send_message", send_message_command)],
         states={
@@ -256,6 +254,8 @@ def main():
         fallbacks=[CommandHandler("end_message", send_message_done)],
     )
     application.add_handler(conv_handler)
+
+    application.add_handler(MessageHandler(filters.TEXT, start))
 
     application.add_error_handler(error)
 
