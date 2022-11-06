@@ -66,7 +66,7 @@ async def register_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         print('Admin added')
     else:
         print('Admin not added')
-    await update.message.reply_text("Админ добавлен. Чтобы сохранить изображение в базе, отправь мне его. /test для единоразовой отправки во все чаты, /clear_db для очистки базы.")
+    await update.message.reply_text("Админ добавлен. Чтобы сохранить изображение в базе, отправь мне его. /send для во все чаты фотки в порядке стэка, /clear_db для очистки базы, /send_message отправить сообщение от имени бота во все чаты.")
 
 
 def is_admin(update: Update) -> bool:
@@ -77,6 +77,14 @@ def is_admin(update: Update) -> bool:
     res = person in admins
     print(person, 'is_admin', res)
     return res
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        await update.message.reply_text("Прости, общаюсь только с админами.")
+        return
+
+    await update.message.reply_text("Чтобы сохранить изображение в базе, отправь мне его. /send для во все чаты фотки в порядке стэка, /clear_db для очистки базы, /send_message отправить сообщение от имени бота во все чаты.")
 
 
 async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -189,6 +197,8 @@ def main():
 
     # application.add_handler(CommandHandler("send_message", send_message))
     # application.add_handler(MessageHandler(filters.TEXT, echo))
+
+    application.add_handler(MessageHandler(filters.TEXT, start))
 
     application.add_handler(MessageHandler(filters.PHOTO, photo))
     application.add_handler(MessageHandler(
