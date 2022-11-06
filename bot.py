@@ -157,6 +157,7 @@ async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     photo_file = await update.message.photo[-1].get_file()
     photo_path = get_new_image_name()
+    print(photo_path)
     await photo_file.download(photo_path)
 
     await update.message.reply_photo(open(photo_path, 'rb'))
