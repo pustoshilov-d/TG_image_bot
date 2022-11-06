@@ -36,7 +36,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-def get_new_image_name() -> str:
+def get_new_image_name() -> PosixPath:
     photos = [int(os.path.basename(x).split('.')[0])
               for x in glob.glob("photos/*")]
     if photos == []:
@@ -45,7 +45,7 @@ def get_new_image_name() -> str:
     return photo
 
 
-def get_first_image_name() -> str:
+def get_first_image_name() -> PosixPath:
     photos = [int(os.path.basename(x).split('.')[0])
               for x in glob.glob("photos/*")]
     if photos == []:
