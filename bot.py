@@ -110,19 +110,10 @@ async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     chats = [str(chat.strip()) for chat in chats if chat != ""]
     print('chats to send', chats)
 
-    photo = get_first_image_name()
-
-    if photo == None:
-        print("no images")
-        if update:
-            await update.message.reply_text("Нет изображений в базе, добавьте!")
-        return
-
     chats_good = []
     message = update.message.text
     for chat in chats:
         try:
-            # photo = random.choice(photos)
             if context:
                 await context.bot.send_message(chat, message)
             else:
