@@ -10,7 +10,7 @@ import glob
 import random
 import requests
 
-from telegram.ext import CommandHandler, MessageHandler, Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import CommandHandler, MessageHandler, Application, CommandHandler, ContextTypes, MessageHandler, filters, ConversationHandler
 from telegram import Update
 
 
@@ -92,7 +92,51 @@ async def send_message_command(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text("Прости, общаюсь только с админами.")
         return
 
-    await update.message.reply_text("Hi")
+    await update.message.reply_text("Напиши сообщение:")
+    return "STATE_GET_MESSAGE"
+
+
+async def send_message_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        await update.message.reply_text("Прости, общаюсь только с админами.")
+        return
+
+    await update.message.reply_text("Напиши сообщение:")
+    return "STATE_GET_MESSAGE"
+
+
+async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chats = open('chats.txt').readlines()
+    chats = [str(chat.strip()) for chat in chats if chat != ""]
+    print('chats to send', chats)
+
+    photo = get_first_image_name()
+
+    if photo == None:
+        print("no images")
+        if update:
+            await update.message.reply_text("Нет изображений в базе, добавьте!")
+        return
+
+    chats_good = []
+    message = update.message.text
+    for chat in chats:
+        try:
+            # photo = random.choice(photos)
+            if context:
+                await context.bot.send_message(chat, message)
+            else:
+                bot = Application.builder().token(TOKEN).build().bot
+                await bot.send_message(chat, message)
+
+            chats_good.append(chat)
+            print('chat good', chat)
+        except Exception as e:
+            print('chat bad', chat, e)
+
+    chats_good = [str(chat) for chat in chats_good]
+    await update.message.reply_text(
+        "Сообщение отправлено в " + ", ".join(chats_good))
 
 
 async def added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -181,10 +225,10 @@ async def send_photos(update: Update = None, context: ContextTypes.DEFAULT_TYPE 
             print('chat good', chat)
         except Exception as e:
             print('chat bad', chat, e)
-    if update:
-        chats_good = [str(chat) for chat in chats_good]
-        await update.message.reply_text(
-            "Изображения отправлены в " + ", ".join(chats_good))
+
+    chats_good = [str(chat) for chat in chats_good]
+    await update.message.reply_text(
+        "Изображения отправлены в " + ", ".join(chats_good))
     os.remove(photo)
 
 
@@ -204,6 +248,20 @@ def main():
     application.add_handler(MessageHandler(filters.PHOTO, photo))
     application.add_handler(MessageHandler(
         filters.StatusUpdate.NEW_CHAT_MEMBERS, added))
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", send_message_command)],
+        states={
+            "STATE_GET_MESSAGE": [
+                MessageHandler(
+                    filters.TEXT & ~(filters.COMMAND |
+                                     filters.Regex("^Done$")),
+                    send_message,
+                )
+            ],
+        }
+    )
+    application.add_handler(conv_handler)
 
     application.add_error_handler(error)
 
